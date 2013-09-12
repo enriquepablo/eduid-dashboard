@@ -192,8 +192,6 @@ def main(global_config, **settings):
     settings['celery'] = celery
     settings['broker_url'] = broker_url
 
-
-
     settings['workmode'] = read_setting_from_env(settings, 'workmode',
                                                  'personal')
 
@@ -203,11 +201,18 @@ def main(global_config, **settings):
                 settings['workmode'])
         )
 
-    raw_permissions = read_setting_from_env(settings, 'mongo_replicaset', '')
-    settings['permission_mapping'] = read_permissions(raw_permissions)
+    raw_permissions = read_setting_from_env(settings, 'permissions_mapping',
+                                            '')
+    settings['permissions_mapping'] = read_permissions(raw_permissions)
     settings['groups_callback'] = read_setting_from_env(settings,
                                                         'groups_callback',
                                                         groups_callback)
+
+    settings['available_languages'] = read_setting_from_env(
+        settings,
+        'available_languages',
+        'en sv es'
+    )
 
     jinja2_settings(settings)
 
@@ -216,6 +221,10 @@ def main(global_config, **settings):
                           locale_negotiator=locale_negotiator)
 
     config = configure_authtk(config, settings)
+
+    locale_path = read_setting_from_env(settings, 'locale_dirs',
+                                        'eduiddashboard:locale')
+    config.add_translation_dirs(locale_path)
 
     config.include('pyramid_beaker')
     config.include('pyramid_jinja2')
