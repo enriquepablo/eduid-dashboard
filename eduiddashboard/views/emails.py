@@ -38,7 +38,6 @@ def get_status(user):
         msg = _('You have to verificate some emails')
         return {
             'icon': get_icon_string('warning-sign'),
-            'msg': msg,
             'pending_actions': msg,
             'completed': (0, 1),
         }
