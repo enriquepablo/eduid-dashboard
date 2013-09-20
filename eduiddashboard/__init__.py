@@ -139,6 +139,9 @@ def profile_urls(config):
     config.add_route('permissions', '/permissions/',
                      factory=PermissionsFactory)
 
+    config.add_route('nin-proofing', '/proofing/nin/',
+                     factory=PersonFactory)
+
 
 def includeme(config):
     # DB setup
