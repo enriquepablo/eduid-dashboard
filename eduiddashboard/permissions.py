@@ -158,5 +158,5 @@ class VerificationsFactory(BaseFactory):
     pass
 
 
-class ProofingFactory(BaseFactory):
+class StatusFactory(BaseFactory):
     pass

@@ -1,6 +1,8 @@
 from hashlib import sha256
 from uuid import uuid4
 
+from pyramid.i18n import TranslationString as _
+
 from eduiddashboard.compat import text_type
 
 
@@ -28,22 +30,49 @@ def filter_tabs(tabs, remove_tabs):
     return filter(lambda tab: tab['id'] not in remove_tabs, tabs)
 
 
+def get_available_tabs(context):
+    from eduiddashboard.views import (emails, personal, postal_address, mobiles,
+                                      permissions, get_dummy_status)
+    default_tabs = [
+        personal.get_tab(),
+        emails.get_tab(),
+        permissions.get_tab(),
+        {'label': _('Passwords'),
+         'status': get_dummy_status,
+         'id': 'passwords',
+        },
+        mobiles.get_tab(),
+        postal_address.get_tab(),
+    ]
+    if context.workmode == 'personal':
+        tabs = filter_tabs(default_tabs, ['permissions'])
+    elif context.workmode == 'helpdesk':
+        tabs = filter_tabs(default_tabs, ['passwords', 'authorization'])
+    else:
+        tabs = default_tabs
+    for tab in tabs:
+        tab['status'] = tab['status'](context.user)
+    return tabs
+
+
 def calculate_filled_profile(user, tabs):
     tuples = []
     for tab in tabs:
         if tab['status'] is not None:
-            status = tab['status'](user)
+            status = tab['status']
             if status is not None:
                 tuples.append(status.get('completed'))
 
-    return [sum(a) for a in zip(*tuples)]
+    filled_profile = [sum(a) for a in zip(*tuples)]
+    return int((float(filled_profile[0]) / float(filled_profile[1])) * 100)
+
 
 
 def get_pending_actions(user, tabs):
     tuples = []
     for tab in tabs:
         if tab['status'] is not None:
-            status = tab['status'](user)
+            status = tab['status']
             if status and 'pending_actions' in status:
                 tuples.append((
                     tab['id'],

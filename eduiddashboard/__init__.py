@@ -16,7 +16,8 @@ from eduiddashboard.i18n import locale_negotiator
 from eduiddashboard.permissions import (RootFactory, PersonFactory,
                                         PasswordsFactory, ResetPasswordFactory,
                                         PostalAddressFactory, MobilesFactory,
-                                        PermissionsFactory, VerificationsFactory)
+                                        PermissionsFactory, VerificationsFactory,
+                                        StatusFactory)
 from eduiddashboard.saml2 import configure_authtk
 from eduiddashboard.userdb import UserDB, get_userdb
 
@@ -176,6 +177,9 @@ def profile_urls(config):
                      factory=MobilesFactory)
     config.add_route('nins-actions', '/nins-actions/',
                      factory=MobilesFactory)
+
+    config.add_route('userstatus', '/userstatus/',
+                     factory=StatusFactory)
 
 
 def includeme(config):

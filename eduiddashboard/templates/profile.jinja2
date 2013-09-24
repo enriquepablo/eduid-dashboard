@@ -5,13 +5,13 @@
 
 {% block contents %}
   <div class='loa-big'>
-    <div>{{ _("Level %(level)s", level=request.session.get('loa', 5)) }}</div>
+    <div>{{ _("Level") }} <span class="level">{{ request.session.get('loa', 5) }}</span></div>
   </div>
 
   {% if context.workmode == 'personal' %}
   <h3>{{ _("Your profile") }}</h3>
   {% else %}
-  <h3>{{ _("Editing %(email)s user", email=context.user.get('mail')) }}</h3>
+  <h3>{{ _("Editing %(email)s user", email=user.get('mail')) }}</h3>
   {% endif %}
 
   <div class='clearfix'></div>
@@ -49,7 +49,7 @@
           </div>
 
           <div class='level-assurance-description'>
-             {{_("You are in %(loa)s level", loa=loa)}}
+             {{_("You are in ") }}<span class="level">{{ loa }}</span> {{_("level")}}
              {% if loa == max_loa %}
                {% trans %}<p>This is the highest level of assurance available for your profile</p>{% endtrans %}
              {% else %}
@@ -72,8 +72,8 @@
 
     </div>
 
-    <div class='span6'>
-      <h4>{{ _("Profile filled") }}: {{ profile_filled }}%</h4>
+    <div class='span6 profile-filled'>
+      <h4>{{ _("Profile filled") }}: <span class="percentaje">{{ profile_filled }}%</span></h4>
       <div class="progress progress-striped">
         <div class="bar" style="width: {{ profile_filled }}%;"></div>
       </div>
@@ -86,7 +86,7 @@
     <ul class='nav nav-tabs'>
       {% for tab in tabs %}
         <li>
-          {% with status = tab.status(user) %}
+          {% with status = tab.status %}
             {% if status and 'icon' in status %}
               <a href='#{{tab.id}}'
                  title='{{_(status.pending_actions)}}'>
@@ -149,6 +149,22 @@ $(document).ready(function () {
     $("a[data-toggle=tooltip]").tooltip();
     $("button[data-toggle=tooltip]").tooltip();
     loa_popovers();
+
+    function showStatus() {
+      userstatus.renderStatus('{{ context.safe_route_url('userstatus') }}');
+    }
+
+    {% if context.workmode == 'personal' %}
+      $('body').on('form-submitted action-executed', function() {
+        showStatus();
+      });
+    {% else %}
+      function statusPolling() {
+        showStatus();
+        window.setTimeout(statusPolling, {{ polling_timeout_for_admin }});
+      }
+      statusPolling();
+    {% endif %}
 
     $('body').on('communication-error', function(){
       var message = $('#communication-error-template').text();
