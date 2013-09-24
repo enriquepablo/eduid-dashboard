@@ -17,11 +17,12 @@ from eduiddashboard.utils import (verify_auth_token, filter_tabs,
 from eduiddashboard.models import UserSearcher
 
 from eduiddashboard.views import (emails, personal, postal_address, mobiles,
-                                  permissions, get_dummy_status)
+                                  nins, permissions, get_dummy_status)
 
 
 AVAILABLE_TABS = [
     personal.get_tab(),
+    nins.get_tab(),
     emails.get_tab(),
     permissions.get_tab(),
     {
