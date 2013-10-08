@@ -2,64 +2,19 @@
 
 {% block nav_class_home %}active{% endblock %}
 
-
-{% block contents %}
-  <div class='loa-big'>
-    <div>{{ _("Level") }} <span class="level">{{ request.session.get('loa', 5) }}</span></div>
-  </div>
-
+{% block title %}
   {% if context.workmode == 'personal' %}
   <h3>{{ _("Your profile") }}</h3>
   {% else %}
   <h3>{{ _("Editing %(email)s user", email=user.get('mail')) }}</h3>
   {% endif %}
+{% endblock %}
 
-  <div class='clearfix'></div>
+
+{% block contents %}
 
   <div class='row'>
     <div class='span6'>
-        {% if context.workmode == 'personal' %}
-          <h4>{{ _("Level of assurance") }}</h4>
-          {% with loa = request.session.get('loa') %}
-          <ul class='circles-widget-labels'>
-            <li><a href='#' title="{{ _('Level 5') }}" data-toggle='popover'
-                  data-content='{{_("This is the lower level you can reach With this loa you can edit some attributes of your profile")}}'>
-                {{ _('Level 5') }}</a></li>
-            {% if max_loa <= 4 %}
-            <li><a href='#' title="{{ _('Level 4') }}" data-toggle='popover'
-                  data-content='{{ _("With this loa you can edit some attributes of your profile")}}'>
-                {{ _('Level 4') }}</a></li>
-            {% endif %}{% if max_loa <= 3 %}
-            <li><a href='#' title="{{ _('Level 3') }}" data-toggle='popover'
-                  data-content='{{ _("With this loa you can edit some attributes of your profile")}}'>
-                {{ _('Level 3') }}</a></li>
-            {% endif %}{% if max_loa <= 2 %}
-            <li><a href='#' title="{{ _('Level 2') }}" data-toggle='popover'
-                  data-content='{{_("With this loa you can edit all attributes of your profile")}}'>
-                {{ _('Level 2') }}</a></li>
-            {% endif %}
-          </ul>
-
-          <div class='circles-widget level-{{ request.session.get('loa', 5) }} max-level-{{ max_loa }}'>
-            <div class='img'></div>
-            <div class='bar'></div>
-          </div>
-
-          <div class='popover-container'>
-          </div>
-
-          <div class='level-assurance-description'>
-             {{_("You are in ") }}<span class="level">{{ loa }}</span> {{_("level")}}
-             {% if loa == max_loa %}
-               {% trans %}<p>This is the highest level of assurance available for your profile</p>{% endtrans %}
-             {% else %}
-               {% trans %}<p>If you want to increase this level to get
-               more permissions you need to resolve the pending actions</p>{% endtrans %}
-             {% endif %}
-          </div>
-
-          {% endwith %}
-        {% endif %}
 
         {% if pending_actions %}
           <h4>{{_("Pending Actions")}}</h4>
@@ -89,6 +44,7 @@
           {% with status = tab.status %}
             {% if status and 'icon' in status %}
               <a href='#{{tab.id}}'
+                 data-toggle='tooltip'
                  title='{{_(status.pending_actions)}}'>
                     <i class='{{status.icon}}'></i>
                 {{_(tab.label)}}
@@ -101,8 +57,28 @@
       {% endfor %}
     </ul>
 
-    <div class='tab-content'>
+    <div class='tab-content info-container'>
       <div class='tab-pane active'></div>
+    </div>
+  </div>
+
+  <div id="askDialog" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="windowTitleLabel" aria-hidden="true">
+    <div class="modal-header">
+      <a href="#" class="close" data-dismiss="modal">&times;</a>
+      <h3 id="askDialogPrompt"></h3>
+    </div>
+    <div class="modal-body">
+      <div class="info-container"></div>
+      <div class="divDialogElements">
+        <input class="xlarge" id="askDialogInput" name="xlInput" type="text" />
+        <p>{{ _('Lost the code?')}} <a href="#" class="resend-code">{{ _('Resend me the verification code') }}</a></p>
+        <p class="extra-info"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a href="#" class="finish-button btn hide" onclick="closeAskDialog();">{{ _('Finish') }}</a>
+      <a href="#" class="btn" onclick="closeAskDialog();">Cancel</a>
+      <a href="#" class="btn btn-primary" onclick="okAskDialog();">OK</a>
     </div>
   </div>
 
@@ -136,12 +112,27 @@
   </div>
 </script>
 
+<script id='communication-error-permissions-template' language='text/template'>
+  <div class='alert communication-error-permissions'>
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+    <strong>{{_('Error!')}}</strong> {{_("You haven't permissions to access that resource.")}}
+  </div>
+</script>
+
 <script>
 
 var loa_popovers = function () {
   $('.circles-widget-labels a').popover({
     placement: 'bottom',
-    trigger: 'hover'
+    trigger: 'hover',
+    delay: {
+      show: 750,
+      hide: 750
+    }
+  });
+
+  $('.circles-widget-labels a').click(function (e) {
+      e.preventDefault();
   });
 };
 
@@ -154,9 +145,18 @@ $(document).ready(function () {
       userstatus.renderStatus('{{ context.safe_route_url('userstatus') }}');
     }
 
+    function reloadTab() {
+      // reload active tab in order to refresh the HTML
+      $('.nav-tabs li.active a').click();
+    }
+
     {% if context.workmode == 'personal' %}
       $('body').on('form-submitted action-executed', function() {
         showStatus();
+      });
+
+      $('body').on('action-executed', function() {
+        reloadTab();
       });
     {% else %}
       function statusPolling() {
@@ -173,7 +173,44 @@ $(document).ready(function () {
         $('.communication-error').fadeOut();
       }, 5*1000);
     });
+
+    $('body').on('communication-error-permissions', function(){
+      var message = $('#communication-error-permissions-template').text();
+      $('.container div.messages').append(message);
+      window.setTimeout(function () {
+        $('.communication-error-permissions').fadeOut();
+      }, 5*1000);
+    });
+
+    $("#askDialog").bind('show', function () {
+    });
+
+    $("#askDialog").bind('shown', function () {
+      $(this).find("#askDialogInput").focus();
+    });
 });
+
+function closeAskDialog() {
+  $("#askDialog").modal('hide'); 
+  $("body").trigger('action-executed');
+};
+
+function okAskDialog() {
+  var input = document.getElementById("askDialogInput");
+  input.askcallback(input.value);
+};
+
+function askDialog(identifier, actionsURL, prompt, defaultvalue, placeholder, askcallback) {
+  var input = document.getElementById("askDialogInput");
+  input.value = defaultvalue;
+  input.placeholder = placeholder;
+  input.askcallback = askcallback; // radical
+  document.getElementById("askDialogPrompt").innerHTML = prompt;
+  $("#askDialog .resend-code").attr('data-identifier', identifier);
+  $("#askDialog .resend-code").attr('href', actionsURL);
+  $("#askDialog .extra-info").html($(".askdialog-extra-info").html());
+  $("#askDialog").modal("show");
+};
 
 </script>
 

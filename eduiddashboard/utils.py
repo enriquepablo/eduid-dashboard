@@ -5,11 +5,12 @@ from pyramid.i18n import TranslationString as _
 
 from eduiddashboard.compat import text_type
 
+from eduiddashboard import AVAILABLE_LOA_LEVEL
 
 MAX_LOA_ROL = {
-    'user': 3,
-    'helpdesk': 2,
-    'admin': 2,
+    'user': AVAILABLE_LOA_LEVEL[0],
+    'helpdesk': AVAILABLE_LOA_LEVEL[1],
+    'admin': AVAILABLE_LOA_LEVEL[2],
 }
 
 
@@ -31,8 +32,9 @@ def filter_tabs(tabs, remove_tabs):
 
 
 def get_available_tabs(context):
-    from eduiddashboard.views import (emails, personal, postal_address, mobiles,
-                                      nins, permissions, get_dummy_status)
+    from eduiddashboard.views import (emails, personal, postal_address,
+                                      mobiles, nins, permissions,
+                                      get_dummy_status)
     default_tabs = [
         personal.get_tab(),
         nins.get_tab(),
@@ -95,3 +97,7 @@ def get_max_available_loa(groups):
 
 def get_unique_hash():
     return text_type(uuid4())
+
+
+def get_short_hash(entropy=6):
+    return uuid4().hex[:entropy]

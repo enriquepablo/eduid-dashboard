@@ -31,7 +31,7 @@
       {% else %}
         <td>
           <label>
-            <i class='icon-refresh' title='{{_("Resend verification")}}'></i>
+            <i class='icon-question-sign' title='{{_("Verify code")}}'></i>
             <input class='hide' type='radio' name='verify' value='{{ loop.index0 }}'>
           </label>
         </td>
@@ -61,4 +61,5 @@
   <div class='form-content hide'>
   {{ form|safe }}
   </div>
+
 {% endblock %}

@@ -10,7 +10,7 @@
    {% for message in request.session.pop_flash(queue='forms') %}
      <div class="alert alert-{{ message|get_flash_message_type }}">
        <button type="button" class="close" data-dismiss="alert">&times;</button>
-       {{ message }}
+       {{ message|safe }}
      </div>
    {% endfor %}
 
@@ -26,6 +26,10 @@
    {{ form|safe }}
    {% endblock %}
 
+   <div class="askdialog-extra-info">
+   {% block askdialog_extra_info %}
+   {% endblock %}
+   </div>
 
    {% block extrajs %}
    <script>
@@ -33,3 +37,5 @@
    </script>
    {% endblock %}
 </div>
+
+

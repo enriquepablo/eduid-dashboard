@@ -16,7 +16,9 @@ from pyramid import testing
 
 from eduiddashboard.db import MongoDB
 from eduiddashboard import main as eduiddashboard_main
+from eduiddashboard import AVAILABLE_LOA_LEVEL
 from eduiddashboard.saml2.userdb import IUserDB
+
 
 MONGO_URI_TEST = 'mongodb://localhost:27017/eduid_dashboard_test'
 MONGO_URI_AM_TEST = 'mongodb://localhost:27017/eduid_am_test'
@@ -36,14 +38,16 @@ MOCKED_USER_STANDARD = {
         'active': False,
     }, {
         'norEduPersonNIN': '123456789013',
-        'verified': False,
-        'active': False,
+        'verified': True,
+        'active': True,
     }],
     'photo': 'https://pointing.to/your/photo',
     'preferredLanguage': 'en',
     'eduPersonEntitlement': [
+        'urn:mace:eduid.se:role:admin',
         'urn:mace:eduid.se:role:student',
     ],
+    'maxReachedLoa': 3,
     'mobile': [{
         'mobile': '609609609',
         'verified': True
@@ -101,6 +105,10 @@ class MockedUserDB(IUserDB):
             yield deepcopy(user)
 
 
+
+def loa(index):
+    return AVAILABLE_LOA_LEVEL[index-1]
+
 def dummy_groups_callback(userid, request):
     return [request.context.workmode]
 
@@ -147,17 +155,18 @@ class LoggedInReguestTests(unittest.TestCase):
             'jinja2.directories': 'eduiddashboard:saml2/templates',
             'jinja2.undefined': 'strict',
             'jinja2.filters': """
-        route_url = pyramid_jinja2.filters:route_url_filter
-        static_url = pyramid_jinja2.filters:static_url_filter
-        get_flash_message_text = eduiddashboard.filters:get_flash_message_text
-        get_flash_message_type = eduiddashboard.filters:get_flash_message_type
-        address_type_text = eduiddashboard.filters:address_type_text
-        country_name = eduiddashboard.filters:country_name
-        context_route_url = eduiddashboard.filters:context_route_url
-        safe_context_route_url = eduiddashboard.filters:safe_context_route_url
+                route_url = pyramid_jinja2.filters:route_url_filter
+                static_url = pyramid_jinja2.filters:static_url_filter
+                get_flash_message_text = eduiddashboard.filters:get_flash_message_text
+                get_flash_message_type = eduiddashboard.filters:get_flash_message_type
+                address_type_text = eduiddashboard.filters:address_type_text
+                country_name = eduiddashboard.filters:country_name
+                context_route_url = eduiddashboard.filters:context_route_url
+                safe_context_route_url = eduiddashboard.filters:safe_context_route_url
             """,
-            'jinja2.i18n.domain': 'eduid-dashboard',
-            'jinja2.extensions': ['jinja2.ext.with_'],
+            'proofing_links': """
+                nin = http://another.platform/nins/{nin}/
+            """,
             'available_languages': 'en es',
             'vccs_url': 'http://localhost:8550/',
         }
@@ -186,15 +195,20 @@ class LoggedInReguestTests(unittest.TestCase):
         self.userdb = self.MockedUserDB(self.users)
 
         self.db.profiles.drop()
+        self.db.verifications.drop()
         self.amdb.attributes.drop()
 
+        users = []
         for user in self.userdb.all_users():
-            self.db.profiles.insert(user)
-            self.amdb.attributes.insert(user)
+            users.append(user)
+
+        self.db.profiles.insert(users)
+        self.amdb.attributes.insert(users)
 
     def tearDown(self):
         super(LoggedInReguestTests, self).tearDown()
         self.db.profiles.drop()
+        self.db.verifications.drop()
         self.amdb.attributes.drop()
         self.testapp.reset()
 
@@ -213,10 +227,16 @@ class LoggedInReguestTests(unittest.TestCase):
         request.registry.settings = self.settings
         return request
 
-    def set_logged(self, user='johnsmith@example.com'):
+    def set_logged(self, user='johnsmith@example.com', extra_session_data={}):
         request = self.set_user_cookie(user)
         user_obj = self.userdb.get_user(user)
-        request = self.add_to_session({'user': user_obj})
+        session_data = {
+            'user': user_obj,
+            'eduPersonAssurance': loa(3),
+            'eduPersonIdentityProofing': loa(3),
+        }
+        session_data.update(extra_session_data)
+        request = self.add_to_session(session_data)
         return request
 
     def set_user_cookie(self, user_id):
