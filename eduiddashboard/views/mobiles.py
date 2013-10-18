@@ -21,11 +21,11 @@ def get_status(user):
     pending_actions = None
 
     if not mobiles:
-        pending_actions = _('You have to add a mobile phone')
+        pending_actions = _('Add mobile phone number')
     else:
         for mobile in mobiles:
             if not mobile['verified']:
-                pending_actions = _('You have to verificate some mobile phone')
+                pending_actions = _('A mobile phone number is pending confirmation')
 
     if pending_actions:
         return {
@@ -68,11 +68,11 @@ def mark_as_verified_mobile(request, user, verified_mobile):
 class MobilesActionsView(BaseActionsView):
     data_attribute = 'mobile'
     verify_messages = {
-        'ok': _('The mobile phone has been verified'),
-        'error': _('The confirmation code is not the one have been sent to your mobile phone'),
-        'request': _('Please revise your SMS inbox and fill below with the given code'),
+        'ok': _('The mobile phone number has been verified'),
+        'error': _('The confirmation code used is invalid, please try again or request a new code'),
+        'request': _('A confirmation code has been sent your mobile phone number'),
         'placeholder': _('Mobile phone code'),
-        'new_code_sent': _('A new verification code has been sent to your mobile number'),
+        'new_code_sent': _('A new confirmation code has been sent to your mobile number'),
     }
 
     def get_verification_data_id(self, data_to_verify):
@@ -98,9 +98,7 @@ class MobilesActionsView(BaseActionsView):
 
         return {
             'result': 'ok',
-            'message': _('One mobile has been removed, please, wait'
-                         ' before your changes are distributed '
-                         'through all applications'),
+            'message': _('Mobile phone number was successfully removed'),
         }
 
     def send_verification_code(self, data_id, code):
@@ -158,14 +156,11 @@ class MobilesView(BaseFormView):
 
         send_verification_code(self.request, self.user, mobile_number)
 
-        self.request.session.flash(_('Your changes was saved, please, wait '
-                                     'before your changes are distributed '
-                                     'through all applications'),
+        self.request.session.flash(_('Changes saved'),
                                    queue='forms')
-        msg = _('A verification number has been sent to your mobile. '
-                'Please revise your SMS inbox and '
-                '<a href="#" class="verifycode" data-identifier="${identifier}">fill here</a>'
-                ' with the given code', mapping={'identifier': mobile_identifier})
+        msg = _('A confirmation code has been sent to your mobile phone. '
+                'Please enter your confirmation code <a href="#" class="verifycode" data-identifier="${identifier}">here</a>',
+                mapping={'identifier': mobile_identifier})
         msg = get_localizer(self.request).translate(msg)
         self.request.session.flash(msg,
                                    queue='forms')
