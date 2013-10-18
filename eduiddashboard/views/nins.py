@@ -62,20 +62,9 @@ def send_verification_code(request, user, nin, code=None):
         code = new_verification_code(request, 'norEduPersonNIN', nin, user,
                                      hasher=get_short_hash)
 
-    msg = _(
-        'This is a message from %(site)s. The code for validate '
-        'your NIN %(nin)s is %(code)s' % {
-            'nin': nin,
-            'code': code,
-            'site': request.registry.settings.get('site.name',
-                                                  'eduID dashboard'),
-        }
-    )
+    language = request.context.get_preferred_language()
 
-    msg = get_localizer(request).translate(msg)
-
-    ## Replace with the nin msg gateway call
-    dummy_message(request, msg)
+    request.msgrelay.nin_validator(nin, code, language)
 
 
 def mark_as_verified_nin(request, user, verified_nin):
@@ -234,7 +223,7 @@ class NinsView(BaseFormView):
         msg = _('A verification message has been sent to your Govt Inbox. '
                 'Please revise your <a href=${nin_link}> nin inbox</a>, return'
                 ' to .this page and <a href="#" class="verifycode" '
-                'data-identifier="${id}">fill here</a> the provided'
+                'data-identifier="${id}">fill here</a> the provided '
                 'verification number', {
                     'id': nin_identifier,
                     'nin_link': nin_proofing_link
