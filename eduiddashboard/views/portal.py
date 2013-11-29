@@ -122,7 +122,7 @@ def session_reload(context, request):
 
 
 @view_config(route_name='help')
-def help(request):
+def help(context, request):
     # We don't want to mess up the gettext .po file
     # with a lot of strings which don't belong to the
     # application interface.
@@ -136,7 +136,7 @@ def help(request):
     locale_name = get_locale_name(request)
     template = 'eduiddashboard:templates/help-%s.jinja2' % locale_name
 
-    return render_to_response(template, {}, request=request)
+    return render_to_response(template, {'user':context.user}, request=request)
 
 
 @view_config(route_name='token-login', request_method='POST')
@@ -171,9 +171,11 @@ def error500view(context, request):
 @view_config(route_name='error500', renderer='templates/error500.jinja2')
 def exception_view(context, request):
     logger.error("The error was: %s" % context, exc_info=(context))
-    message = getattr(context, 'message', '')
     request.response.status = 500
-    return {'msg': message}
+    #message = getattr(context, 'message', '')
+    # `message' might include things like database connection details (with authentication
+    # parameters), so it should NOT be displayed to the user.
+    return {'msg': 'Code exception'}
 
 
 @view_config(route_name='error404', renderer='templates/error404.jinja2')
