@@ -36,15 +36,15 @@ REQUIRED_GROUP_PER_WORKMODE = {
 }
 
 REQUIRED_LOA_PER_WORKMODE = {
-    'personal': 'http://www.swamid.se/assurance/al1',
-    'helpdesk': 'http://www.swamid.se/assurance/al2',
-    'admin': 'http://www.swamid.se/assurance/al3',
+    'personal': 'http://www.swamid.se/policy/assurance/al1',
+    'helpdesk': 'http://www.swamid.se/policy/assurance/al2',
+    'admin': 'http://www.swamid.se/policy/assurance/al3',
 }
 
 AVAILABLE_LOA_LEVEL = [
-    'http://www.swamid.se/assurance/al1',
-    'http://www.swamid.se/assurance/al2',
-    'http://www.swamid.se/assurance/al3',
+    'http://www.swamid.se/policy/assurance/al1',
+    'http://www.swamid.se/policy/assurance/al2',
+    'http://www.swamid.se/policy/assurance/al3',
 ]
 
 
