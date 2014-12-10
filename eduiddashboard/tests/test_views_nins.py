@@ -118,46 +118,6 @@ class NinsFormTests(LoggedInReguestTests):
         response_json = json.loads(response.body)
         self.assertEqual(response_json['result'], 'getcode')
 
-    def test_remove_existant_verified_nin(self):
-        self.set_logged()
-
-        self.testapp.post(
-            '/profile/nins-actions/',
-            {'identifier': '210987654321 0', 'action': 'remove'},
-            status=200)
-
-    def test_remove_existant_notverified_nin(self):
-        self.set_logged()
-
-        nins_before = self.db.verifications.find({
-            'model_name': 'norEduPersonNIN',
-            'user_oid': self.user.get_id()
-        }).count()
-
-        response = self.testapp.post(
-            '/profile/nins-actions/',
-            {'identifier': '123456789050 0', 'action': 'remove'},
-            status=200)
-
-        nins_after = self.db.verifications.find({
-            'model_name': 'norEduPersonNIN',
-            'user_oid': self.user.get_id()
-        }).count()
-
-        response_json = json.loads(response.body)
-        self.assertEqual(response_json['result'], 'ok')
-        self.assertEqual(nins_before - 1, nins_after)
-
-    def test_remove_not_existant_nin(self):
-        self.set_logged(user='johnsmith@example.org')
-
-        response = self.testapp.post(
-            '/profile/nins-actions/',
-            {'identifier': '210987654399 24', 'action': 'remove'}
-        )
-        response_json = json.loads(response.body)
-        self.assertEqual(response_json['result'], 'out_of_sync')
-
     def test_steal_verified_nin(self):
         self.set_logged(user='johnsmith@example.org')
 
