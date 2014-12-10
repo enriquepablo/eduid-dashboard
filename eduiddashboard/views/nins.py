@@ -165,33 +165,6 @@ class NINsActionsView(BaseActionsView):
 
         return self._verify_action(verify_nin, post_data)
 
-    def remove_action(self, data, post_data):
-        """ Only not verified nins can be removed """
-        nin, index = data.split()
-        index = int(index)
-        nins = get_not_verified_nins_list(self.request, self.user)
-
-        if len(nins) > index:
-            remove_nin = nins[index]
-            if remove_nin != nin:
-                return self.sync_user()
-        else:
-            return self.sync_user()
-
-        verifications = self.request.db.verifications
-        verifications.remove({
-            'model_name': self.data_attribute,
-            'obj_id': remove_nin,
-            'user_oid': self.user.get_id(),
-            'verified': False,
-        })
-
-        message = _('National identity number has been removed')
-        return {
-            'result': 'ok',
-            'message': get_localizer(self.request).translate(message),
-        }
-
     def send_verification_code(self, data_id, reference, code):
         send_verification_code(self.request, self.user, data_id, reference, code)
 

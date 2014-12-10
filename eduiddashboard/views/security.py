@@ -444,10 +444,19 @@ class ResetPasswordStep2View(BaseResetPasswordView):
                 if nins:
                     nin = nins[-1]
                     if nin is not None:
-                        self.request.db.profiles.update({"_id": user.get_id()}, {"$set": {"norEduPersonNIN": []}})
-                        self.request.db.verifications.remove({"user_oid": user.get_id(),
-                                                              "model_name": "norEduPersonNIN",
-                                                              "obj_id": nin})
+                        self.request.db.profiles.update({
+                            "_id": user.get_id()
+                        }, {
+                            "$set": {"norEduPersonNIN": []}
+                        })
+                        self.request.db.verifications.update({
+                            "user_oid": user.get_id(),
+                            "model_name": "norEduPersonNIN",
+                            "obj_id": nin
+                        }, {
+
+                            "$set": {"verified": False}
+                        })
                         update_attributes('eduid_dashboard', str(user['_id']))
             url = self.request.route_url('profile-editor')
             reset = True
