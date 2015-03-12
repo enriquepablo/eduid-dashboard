@@ -141,10 +141,10 @@ class EmailOrUsernameExistsValidator(object):
         if not is_email:
             try:
                 request.userdb.get_user_by_username(value)
-            except UserDB.UserDoesNotExist:
+            except UserDoesNotExist:
                 err = _("Username does not exist")
                 raise colander.Invalid(node, localizer.translate(err))
-            except UserDB.MultipleUsersReturned:
+            except MultipleUsersReturned:
                 err = _("There is more than one user for that username")
                 raise colander.Invalid(node, localizer.translate(err))
         else:
@@ -172,7 +172,7 @@ class NINExistsValidator(object):
         request = node.bindings.get('request')
         try:
             request.userdb.get_user_by_nin(value)
-        except UserDB.UserDoesNotExist:
+        except UserDoesNotExist:
             err = _("This national identity number does not exist, "
                     "is not verified or is not active")
             raise colander.Invalid(node, get_localizer(request).translate(err))
