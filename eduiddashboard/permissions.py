@@ -328,6 +328,7 @@ class PermissionsFactory(BaseFactory):
 class VerificationsFactory(BaseFactory):
 
     def get_user(self):
+        #XXX
         verification_code = self.request.db.verifications.find_one({
             'code': self.request.matchdict['code'],
         })

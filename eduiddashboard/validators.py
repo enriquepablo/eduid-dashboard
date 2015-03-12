@@ -194,6 +194,7 @@ class NINUniqueValidator(object):
         user = request.context.user
         user_nins = user.get_nins()
 
+        #XXX
         unverified_user_nins = request.db.verifications.find({
             'obj_id': value,
             'model_name': 'norEduPersonNIN',
@@ -263,6 +264,7 @@ class ResetPasswordCodeExistsValidator(object):
 
     def __call__(self, node, value):
         request = node.bindings.get('request')
+        #XXX
         if not request.db.reset_passwords.find_one({'hash_code': value}):
             err = _("The entered code does not exist")
             raise colander.Invalid(node, get_localizer(request).translate(err))

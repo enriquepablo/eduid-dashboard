@@ -46,9 +46,11 @@ def change_password(request, user, old_password, new_password):
 def new_reset_password_code(request, user, mechanism='email'):
     hash_code = get_unique_hash()
     date = datetime.now(pytz.utc)
+    #XXX
     request.db.reset_passwords.remove({
         'email': user.get_mail()
     })
+    #XXX
     reference = request.db.reset_passwords.insert({
         'email': user.get_mail(),
         'hash_code': hash_code,
@@ -463,6 +465,7 @@ class ResetPasswordStep2View(BaseResetPasswordView):
 
     def __call__(self):
         hash_code = self.request.matchdict['code']
+        #XXX
         password_reset = self.request.db.reset_passwords.find_one({'hash_code': hash_code})
 
         if password_reset is None:
@@ -472,6 +475,7 @@ class ResetPasswordStep2View(BaseResetPasswordView):
         reset_timeout = int(self.request.registry.settings['password_reset_timeout'])
         reset_date = password_reset['created_at'] + timedelta(minutes=reset_timeout)
         if reset_date < date:
+            #XXX
             self.request.db.reset_passwords.remove({'_id': password_reset['_id']})
             return HTTPFound(self.request.route_path('reset-password-expired'))
 
@@ -488,6 +492,7 @@ class ResetPasswordStep2View(BaseResetPasswordView):
     def reset_success(self, passwordform):
         form_data = self.schema.serialize(passwordform)
         hash_code = self.request.matchdict['code']
+        #XXX
         password_reset = self.request.db.reset_passwords.find_one({'hash_code': hash_code})
         user = self.request.userdb.get_user_by_email(password_reset['email'])
         user.retrieve_modified_ts(self.request.db.profiles)
@@ -500,7 +505,7 @@ class ResetPasswordStep2View(BaseResetPasswordView):
             new_password = self.get_suggested_password()
 
         new_password = new_password.replace(' ', '')
-
+        #XXX
         self.request.db.reset_passwords.remove({'_id': password_reset['_id']})
         ok = change_password(self.request, user, '', new_password)
 
@@ -511,6 +516,7 @@ class ResetPasswordStep2View(BaseResetPasswordView):
                 if nins:
                     nin = nins[-1]
                     if nin is not None:
+                        #XXX
                         self.request.db.profiles.update({
                             "_id": user.get_id()
                         }, {
@@ -518,6 +524,7 @@ class ResetPasswordStep2View(BaseResetPasswordView):
                         })
                         # Do not remove the verification as we no longer allow users to remove a already verified nin
                         # even if it gets unverified by a e-mail password reset.
+                        #XXX
                         self.request.db.verifications.update({
                             "user_oid": user.get_id(),
                             "model_name": "norEduPersonNIN",

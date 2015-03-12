@@ -96,6 +96,7 @@ def get_not_verified_nins_list(request, user):
     """
     active_nins = user.get_nins()
     nins = []
+    #XXX
     verifications = request.db.verifications
     not_verified_nins = verifications.find({
         'model_name': 'norEduPersonNIN',
@@ -179,7 +180,7 @@ class NINsActionsView(BaseActionsView):
                 return self.sync_user()
         else:
             return self.sync_user()
-
+        #XXX
         verifications = self.request.db.verifications
         verifications.remove({
             'model_name': self.data_attribute,
@@ -309,7 +310,7 @@ class NinsView(BaseFormView):
         newnin = newnin['norEduPersonNIN']
 
         newnin = normalize_nin(newnin)
-
+        #XXX
         old_user = self.request.db.profiles.find_one({
             'norEduPersonNIN': newnin
             })

@@ -30,6 +30,7 @@ def get_verification_code(request, model_name, obj_id=None, code=None, user=None
     if user is not None:
         filters['user_oid'] = user.get_id()
     log.debug("Verification code lookup filters : {!r}".format(filters))
+    #XXX
     result = request.db.verifications.find_one(filters)
     if result:
         expiration_timeout = request.registry.settings.get('verification_code_timeout')
@@ -51,6 +52,7 @@ def new_verification_code(request, model_name, obj_id, user, hasher=None):
         "verified": False,
         "timestamp": datetime.now(utc),
     }
+    #XXX
     doc_id = request.db.verifications.insert(obj)
     reference = unicode(doc_id)
     session_verifications = request.session.get('verifications', [])
@@ -62,6 +64,7 @@ def new_verification_code(request, model_name, obj_id, user, hasher=None):
 
 
 def get_not_verified_objects(request, model_name, user):
+    #XXX
     return request.db.verifications.find({
         'user_oid': user.get_id(),
         'model_name': model_name,
@@ -73,6 +76,7 @@ def verify_nin(request, user, new_nin, reference):
     log.info('Trying to verify NIN for user {!r}.'.format(user))
     log.debug('NIN: {!s}.'.format(new_nin))
     # Start by removing nin from any other user
+    #XXX
     old_user_docs = request.db.profiles.find({
         'norEduPersonNIN': new_nin
     })
@@ -106,6 +110,7 @@ def verify_mobile(request, user, new_mobile):
     log.info('Trying to verify mobile number for user {!r}.'.format(user))
     log.debug('Mobile number: {!s}.'.format(new_mobile))
     # Start by removing mobile number from any other user
+    #XXX
     old_user_docs = request.db.profiles.find({
         'mobile': {'$elemMatch': {'mobile': new_mobile, 'verified': True}}
     })
@@ -130,6 +135,7 @@ def verify_mail(request, user, new_mail):
     log.info('Trying to verify mail address for user {!r}.'.format(user))
     log.debug('Mail address: {!s}.'.format(new_mail))
     # Start by removing mail address from any other user
+    #XXX
     old_user_docs = request.db.profiles.find({
         'mailAliases': {'$elemMatch': {'email': new_mail, 'verified': True}}
     })
@@ -165,6 +171,7 @@ def verify_code(request, model_name, code):
     :type request: webob.request.BaseRequest
     :return: string of verified data
     """
+    #XXX
     this_verification = request.db.verifications.find_one(
         {
             "model_name": model_name,
@@ -208,6 +215,7 @@ def verify_code(request, model_name, code):
             'verified_timestamp': datetime.utcnow()
         }
         this_verification.update(verified)
+        #XXX
         request.db.verifications.update({'_id': this_verification['_id']}, this_verification)
         log.info("Code {!r} ({!s}) marked as verified".format(code, obj_id))
     except UserOutOfSync:
@@ -220,7 +228,7 @@ def verify_code(request, model_name, code):
 
 
 def save_as_verified(request, model_name, user_oid, obj_id):
-
+    #XXX
     old_verified = request.db.verifications.find(
         {
             "model_name": model_name,
@@ -235,6 +243,7 @@ def save_as_verified(request, model_name, user_oid, obj_id):
         if old['user_oid'] == user_oid:
             return obj_id
     # User was not verified before, create a verification document
+    #XXX
     result = request.db.verifications.find_and_modify(
         {
             "model_name": model_name,
