@@ -15,6 +15,7 @@ class LookupMobileRelay(object):
                                        'amqp://eduid:eduid@127.0.0.1:5672/lookup_mobile'),
             'TEMPLATES_DIR': 'templates/',
             'CELERY_RESULT_BACKEND': 'amqp',
+            'CELERY_TASK_SERIALIZER': 'json',
         }
 
         app.conf.update(config)
