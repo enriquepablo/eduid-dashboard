@@ -365,16 +365,6 @@ def validate_nin_by_mobile(request, user, nin):
         else:
             log.info('NIN verified by mobile for user {!r}.'.format(user))
 
-
-    log.debug("ID-PROOFING-MOBILE:: nin: {nin}, by number: {mobile} verified with id: {mobile_ver_id}, registered to: {reg_nin}, "
-         "status: {stat}, success: {success}"
-         .format(nin=national_identity_number,
-                 mobile=mobile_used,
-                 mobile_ver_id=verification_id,
-                 reg_nin=registered_to_nin,
-                 stat=validation_status,
-                 success=validation_result['success']))
-
     return validation_result
 
 class NINRegisteredMobileValidator(object):
