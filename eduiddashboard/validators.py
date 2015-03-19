@@ -282,66 +282,98 @@ def _get_age(nin):
 
 def validate_nin_by_mobile(request, user, nin):
     from eduid_lookup_mobile.utilities import format_NIN
+    log.info('Trying to verify NIN by mobile for user {!r}.'.format(user))
+    log.debug('NIN: {!s}.'.format(nin))
+
     # Get list of verified mobile numbers
     verified_mobiles = []
     for one_mobile in user.get_mobiles():
         if one_mobile['verified']:
             verified_mobiles.append(one_mobile['mobile'])
+    log.debug('Mobiles to try: {0}'.format(verified_mobiles))
 
     national_identity_number = format_NIN(nin)
-    status = 'no_phone'
-    valid_mobile = None
+    # Status of the validation
+    validation_status = 'no_phone'
+    # Mobile number used for the validation
+    mobile_used = None
+    # Will contain the nin of the owner to the mobile_used
     registered_to_nin = None
-
+    # TODO All relations?
+    valid_relations = ['FA', 'MO']
     age = _get_age(national_identity_number)
+    log.debug("Age of user: {0}".format(age))
 
     try:
         for mobile_number in verified_mobiles:
-            status = 'no_match'
+            validation_status = 'no_match'
             # Get the registered owner of the mobile number
             registered_to_nin = request.lookuprelay.find_NIN_by_mobile(mobile_number)
             registered_to_nin = format_NIN(registered_to_nin)
+            log.debug("Try by mobile {mobile}, registered to {nin}".format(mobile=mobile_number, nin=registered_to_nin))
 
+            # Check if registered nin was the given nin
             if registered_to_nin == national_identity_number:
-                # Check if registered nin was the given nin
-                valid_mobile = mobile_number
-                status = 'match'
+                mobile_used = mobile_number
+                validation_status = 'match'
                 break
+            # Check if registered nin is related to given nin
             elif registered_to_nin is not None and age < 18:
-                # Check if registered nin is related to given nin
                 relation = request.msgrelay.get_relations_to(national_identity_number, registered_to_nin)
-                # TODO All relations?
-                #valid_relations = ['M', 'B', 'FA', 'MO', 'VF']
-                valid_relations = ['FA', 'MO']
+                log.debug("Relation between {nin} and {reg_nin}: {rel}".format(nin=national_identity_number,
+                                                                               reg_nin=registered_to_nin,
+                                                                               rel=relation))
                 if any(r in relation for r in valid_relations):
-                    valid_mobile = mobile_number
-                    status = 'match_by_navet'
+                    mobile_used = mobile_number
+                    validation_status = 'match_by_navet'
                     break
+            log.debug("No valid relation between {nin} and mobile number {mobile}".format(nin=national_identity_number,
+                                                                                          mobile=mobile_number))
     except request.lookuprelay.TaskFailed:
-        status = 'error_lookup'
+        validation_status = 'error_lookup'
     except request.msgrelay.TaskFailed:
-        status = 'error_navet'
+        validation_status = 'error_navet'
 
+    # Get error message
     msg = None
-    if status == 'no_phone':
+    if validation_status == 'no_phone':
         msg = _('You have no confirmed mobile phone')
-    elif status == 'no_match':
+    elif validation_status == 'no_match':
         msg = _('The given mobile number was not associated to the given national identity number')
-    elif status == 'error_lookup' or status == 'error_navet':
+    elif validation_status == 'error_lookup' or validation_status == 'error_navet':
         msg = _('Sorry, we are experiencing temporary technical '
                 'problem with ${service_name}, please try again '
                 'later.')
 
-    validation_result = {'success': valid_mobile is not None, 'message': msg, 'mobile': valid_mobile}
+    validation_result = {'success': mobile_used is not None, 'message': msg, 'mobile': mobile_used}
 
-    # TODO What to log ?
-    log.debug("ID-PROOFING:: nin: {nin}, by number: {mobile}, registered to: {reg_nin}, "
-             "status: {stat}, success: {success}"
-             .format(nin=national_identity_number,
-                     mobile=valid_mobile,
-                     reg_nin=registered_to_nin,
-                     stat=status,
-                     success=validation_result['success']))
+    # Log the verification
+    verification_id = None
+    if validation_result['success']:
+        # Use the verification id from the mobile verification as id proofing id
+        mobile_verification_data = request.db.verifications.find_one(
+            {
+                "obj_id": mobile_used,
+                "user_oid": user.get_id(),
+                "model_name": "mobile",
+            })
+        verification_id = unicode(mobile_verification_data['_id'])
+        # If the validation used navet information, then log navet information
+        if validation_status == 'match_by_navet':
+            request.msgrelay.postal_address_to_transaction_audit_log(verification_id, nin)
+            log.info('NIN verified by mobile for user {!r}. Mobile registered to parent'.format(user))
+        else:
+            log.info('NIN verified by mobile for user {!r}.'.format(user))
+
+
+    log.debug("ID-PROOFING-MOBILE:: nin: {nin}, by number: {mobile} verified with id: {mobile_ver_id}, registered to: {reg_nin}, "
+         "status: {stat}, success: {success}"
+         .format(nin=national_identity_number,
+                 mobile=mobile_used,
+                 mobile_ver_id=verification_id,
+                 reg_nin=registered_to_nin,
+                 stat=validation_status,
+                 success=validation_result['success']))
 
     return validation_result
 

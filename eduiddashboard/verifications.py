@@ -95,7 +95,7 @@ def verify_nin(request, user, new_nin, reference):
     user.add_verified_nin(new_nin)
     user.retrieve_address(request, new_nin)
     # Connect the verification to the transaction audit log
-    request.msgrelay.postal_address_to_transaction_audit_log(reference)
+    request.msgrelay.postal_address_to_transaction_audit_log(reference, new_nin)
     # Reset session eduPersonIdentityProofing on NIN verification
     request.session['eduPersonIdentityProofing'] = None
     log.info('NIN verified for user {!r}.'.format(user))

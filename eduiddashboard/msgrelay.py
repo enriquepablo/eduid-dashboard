@@ -238,12 +238,12 @@ class MsgRelay(object):
         else:
             raise self.TaskFailed('Something goes wrong')
 
-    def postal_address_to_transaction_audit_log(self, reference):
+    def postal_address_to_transaction_audit_log(self, reference, nin):
         """
             Adds the users postal address to the eduid_msg transaction log when validating a nin.
         """
-        logger.debug('SENT postal address message for transaction log with reference: {0}'.format(reference))
-        self._set_audit_log_postal_address.delay(reference)
+        logger.debug('SENT postal address message for transaction log with reference: {0}, and nin: {1}'.format(reference,nin))
+        self._set_audit_log_postal_address.delay(reference, nin)
 
 
 def get_msgrelay(request):
