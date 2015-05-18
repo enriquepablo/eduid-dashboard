@@ -409,7 +409,10 @@ class NinsWizard(BaseWizard):
 
         nins_view = NinsView(self.context, self.request)
 
-        return nins_view.add_nin_external(data)
+        result = nins_view.add_nin_external(data)
+        if result['status'] == 'ok':
+            result['status'] = 'success'
+        return result
 
     def step_1(self, data):
         """ The verification code form """
@@ -420,7 +423,7 @@ class NinsWizard(BaseWizard):
         if result['result'] == 'ok':
             self.request.stats.count('dashboard/nin_wizard_step_1_ok', 1)
             return {
-                'status': 'ok',
+                'status': 'success',
             }
         else:
             self.request.stats.count('dashboard/nin_wizard_step_1_fail', 1)
@@ -452,8 +455,8 @@ class NinsWizard(BaseWizard):
             NINsActionsView.default_verify_messages.get('new_code_sent', ''))
         self.request.stats.count('dashboard/nin_wizard_resend_code', 1)
         return {
-            'status': 'ok',
-            'text': text,
+            'status': 'success',
+            'text': NINsActionsView.special_verify_messages['new_code_sent'],
         }
 
     def get_template_context(self):
