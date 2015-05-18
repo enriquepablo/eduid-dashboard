@@ -1,7 +1,6 @@
 # NINS form
 
 import deform
-from datetime import datetime
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPNotFound, HTTPNotImplemented
 from pyramid.i18n import get_localizer
@@ -75,6 +74,7 @@ def send_verification_code(request, user, nin, reference=None, code=None):
     language = request.context.get_preferred_language()
 
     request.msgrelay.nin_validator(reference, nin, code, language, nin, message_type='mm')
+    request.stats.count('dashboard/nin_send_verification_code', 1)
 
 
 def get_tab(request):
@@ -227,6 +227,7 @@ class NINsActionsView(BaseActionsView):
             'verified': False,
         })
 
+        self.request.stats.count('dashboard/nin_remove', 1)
         message = _('National identity number has been removed')
         return {
             'result': 'ok',
@@ -248,6 +249,7 @@ class NINsActionsView(BaseActionsView):
 
         send_verification_code(self.request, self.context.user, nin)
 
+        self.request.stats.count('dashboard/nin_code_resend', 1)
         message = self.verify_messages['new_code_sent']
         return {
             'result': 'ok',
@@ -338,6 +340,7 @@ class NinsView(BaseFormView):
                 'data': e.error.asdict()
             }
         self.addition_with_code_validation(validated)
+        self.request.stats.count('dashboard/nin_add_external', 1)
         return {
             'status': 'ok'
         }
@@ -378,6 +381,7 @@ class NinsView(BaseFormView):
         self.request.session.flash(
                 get_localizer(self.request).translate(message),
                 queue='forms')
+        self.request.stats.count('dashboard/nin_add_other', 1)
 
     def add_success(self, ninform):
         """ This method is bounded to the "add"-button by it's name """
@@ -414,10 +418,12 @@ class NinsWizard(BaseWizard):
         result = nins_action_view._verify_action(normalize_nin(self.datakey), data)
 
         if result['result'] == 'ok':
+            self.request.stats.count('dashboard/nin_wizard_step_1_ok', 1)
             return {
                 'status': 'ok',
             }
         else:
+            self.request.stats.count('dashboard/nin_wizard_step_1_fail', 1)
             return {
                 'status': 'failure',
                 'data': {
@@ -444,6 +450,7 @@ class NinsWizard(BaseWizard):
                                self.datakey)
         text = NINsActionsView.special_verify_messages.get('new_code_sent',
             NINsActionsView.default_verify_messages.get('new_code_sent', ''))
+        self.request.stats.count('dashboard/nin_wizard_resend_code', 1)
         return {
             'status': 'ok',
             'text': text,

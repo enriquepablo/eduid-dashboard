@@ -1,10 +1,11 @@
-import os
 import re
 
 import logging
 
 from pkg_resources import resource_filename
 from deform import Form
+
+from stathatasync import StatHat
 
 from pyramid.config import Configurator
 from pyramid.exceptions import ConfigurationError
@@ -64,6 +65,26 @@ REQUIRED_PROOFING_LINKS = (
 
 
 log = logging.getLogger('eduiddashboard')
+
+
+class NoOpStats(object):
+    """
+    No-op class used when stathats_user is not set.
+
+    Having this no-op class initialized in case there is no stathats_user
+    configured allows us to not check if request.stats is set everywhere.
+    """
+    def __init__(self, logger = None):
+        self.logger = logger
+
+    def count(self, name, value):
+        if self.logger:
+            self.logger.info('No-op stats count: {!r} {!r}'.format(name, value))
+
+    def value(self, name, value):
+        if self.logger:
+            self.logger.info('No-op stats value: {!r} {!r}'.format(name, value))
+
 
 class ConfiguredHostStaticURLInfo(StaticURLInfo):
 
@@ -231,6 +252,19 @@ def includeme(config):
     config.add_request_method(get_lookuprelay, 'lookuprelay', reify=True)
 
     config.set_request_property(is_logged, 'is_logged', reify=True)
+
+    if settings.get('stathats_username'):
+        config.registry.settings['stathat'] = StatHat(settings.get('stathats_username'))
+    else:
+        config.registry.settings['stathat'] = NoOpStats()
+    get_stats = lambda x: x.registry.settings['stathat']
+    # Make the result of the get_stats lambda available as request.stats
+    config.set_request_property(get_stats, 'stats', reify=True)
+
+
+    #
+    # Route setups
+    #
 
     config.add_route('home', '/', factory=HomeFactory)
     if settings['workmode'] == 'personal':
