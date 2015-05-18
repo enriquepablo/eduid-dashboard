@@ -96,7 +96,6 @@ def verify_nin(request, user, new_nin, reference):
 
     # Add the verified nin to the requesting user
     user.add_verified_nin(new_nin)
-    request.stats.count('dashboard/verify_nin_add_nin', 1)
     user.retrieve_address(request, new_nin)
     # Connect the verification to the transaction audit log
     request.msgrelay.postal_address_to_transaction_audit_log(reference)
