@@ -43,6 +43,6 @@ def get_stats_instance(settings, logger):
     :param logger: logging logger
     :return: Instance of object with a `count` and a `value` function.
     """
-    if 'stathats_username' in settings:
-        return StatHat(settings.get('stathats_username'))
+    if 'stathat_username' in settings:
+        return StatHat(settings.get('stathat_username'))
     return NoOpStats(logger = logger)

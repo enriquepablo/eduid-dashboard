@@ -443,7 +443,7 @@ def main(global_config, **settings):
         '60',
     )
 
-    settings['stathats_username'] = read_setting_from_env(settings, 'stathats_username')
+    settings['stathat_username'] = read_setting_from_env(settings, 'stathat_username')
 
     jinja2_settings(settings)
 
