@@ -21,7 +21,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.txt')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
-version = '0.3.8'
+version = '0.3.9b'
 
 requires = [
     'eduid_am>=0.5.3,<0.6.0-dev',
@@ -46,7 +46,7 @@ requires = [
     'pwgen==0.4',
     'zxcvbn==1.0',
     'pytz',
-    'stathat-async',
+    'stathat-async==0.0.3',
 ]
 
 if sys.version_info[0] < 3:
