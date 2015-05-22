@@ -26,8 +26,8 @@ version = '0.3.9b2'
 requires = [
     'eduid_am',
     'eduid_msg',
-    'vccs_client>=0.4.1',
-    'eduid_lookup_mobile>=0.0.4',
+    'vccs_client',
+    'eduid_lookup_mobile',
     'eduid_userdb',
     'pysaml2==1.2.0beta2',
     'pymongo>=2.8,<3',
