@@ -29,7 +29,7 @@ requires = [
     'vccs_client',
     'eduid_lookup_mobile',
     'eduid_userdb',
-    'pysaml2==1.2.0beta2',
+    'pysaml2==1.1.0',
     'pymongo>=2.8,<3',
     'pyramid==1.4.1',
     'pyramid_jinja2==1.6',
