@@ -47,7 +47,7 @@ requires = [
     'pwgen==0.4',
     'zxcvbn==1.0',
     'pytz',
-    'stathat_async==0.0.3',
+    'stathat-async==0.0.3',
 ]
 
 if sys.version_info[0] < 3:
